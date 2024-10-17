@@ -36,8 +36,10 @@ jobs:
       - docker/check
       - docker/build:
           image: asher96/node-app-for-devops
+          tag: <<pipeline.git.tag>>
       - docker/push:
           image: asher96/node-app-for-devops
+          tag: <<pipeline.git.tag>>
 
   # deploy:
   #   # docker:
@@ -56,15 +58,59 @@ jobs:
   #               heroku container:release web -a edison-su-devops
 
 workflows:
-  simple_workflow:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build
-      - publish:
-          requires:
-            - test
+  # simple_workflow:
+  #   jobs:
+  #     - build
+  #     - test:
+  #         requires:
+  #           - build
+  #     - publish:
+  #         requires:
+  #           - test
       # - deploy:
       #     requires:
       #       - publish
+
+  # Workflow for the main branch
+  main_workflow:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: main
+      - test:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+
+  # Workflow for the release branch
+  release_workflow:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: release
+      - test:
+          requires:
+            - build
+          filters:
+            branches:
+              only: release
+      - publish:
+          requires:
+            - test
+          filters:
+            branches:
+              only: release
+            tags:
+              only: /^v.*/ # Only run on tags that start with "v"
+      # - deploy:
+      #     requires:
+      #       - publish
+      #     filters:
+      #       branches:
+      #         only: release
+      #       tags:
+      #         only: /^v.*/
