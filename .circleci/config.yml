@@ -46,7 +46,7 @@ jobs:
     docker:
       - image: cimg/node:16.10
     environment:
-      IMAGE_NAME: asherchew/node-test
+      IMAGE_NAME: asher96/node-app-for-devops
     steps:
       - checkout
       - setup_remote_docker      
@@ -54,9 +54,20 @@ jobs:
       - run: docker build -t $IMAGE_NAME .
       - snyk/scan: 
           docker-image-name: $IMAGE_NAME
-      # - snyk/install
-      # - run: |
-      #     snyk code test
+
+  codescan:
+    docker:
+      - image: cimg/node:16.10
+    environment:
+      IMAGE_NAME: asher96/node-app-for-devops
+    steps:
+      - checkout
+      - setup_remote_docker
+      - docker/check
+      - run: docker build -t $IMAGE_NAME .
+      - snyk/install
+      - run: |
+          snyk code test
 
   # deploy:
   #   # docker:
@@ -102,6 +113,12 @@ workflows:
             branches:
               only: main
       - scan:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+      - codescan:
           requires:
             - build
           filters:
